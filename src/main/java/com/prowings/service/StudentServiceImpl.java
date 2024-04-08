@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.prowings.dao.StudentDao;
 import com.prowings.entity.Student;
+import com.prowings.exception.InvalidStudentException;
 
 @Service
 public class StudentServiceImpl implements StudentService {
@@ -21,6 +22,18 @@ public class StudentServiceImpl implements StudentService {
 		
 		return studentDao.saveStudent(std);
 	}
+	
+	private boolean validStudent(Student std) {
+		
+		if(std.getName().length() >= 3)
+			return true;
+		else
+			throw new InvalidStudentException("invalid name");
+	}
+	
+	
+	
+	
 
 	@Override
 	public Student getStudentById(int id) {

@@ -3,7 +3,6 @@ package com.prowings.dao;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.management.RuntimeErrorException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
@@ -16,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import com.prowings.entity.Student;
+import com.prowings.exception.StudentNotFoundException;
 
 @Repository
 public class StudentDaoImpl implements StudentDao {
@@ -61,9 +61,13 @@ public class StudentDaoImpl implements StudentDao {
 			e.printStackTrace();
 			if (txn != null)
 				txn.rollback();
-		}
-		return res;
 
+			throw e;
+		}
+		if (res != null)
+			return res;
+		else
+			throw new StudentNotFoundException(id);
 	}
 
 	@Override
@@ -91,7 +95,6 @@ public class StudentDaoImpl implements StudentDao {
 
 	}
 
-	
 	@Override
 	public List<Student> findByCity(String address) {
 		try (Session session = sessionFactory.openSession()) {
@@ -103,8 +106,6 @@ public class StudentDaoImpl implements StudentDao {
 		}
 	}
 
-	
-	
 	@Override
 	public List<Student> findAllSortedByField(String field) {
 		try (Session session = sessionFactory.openSession()) {
@@ -116,8 +117,7 @@ public class StudentDaoImpl implements StudentDao {
 			return session.createQuery(criteriaQuery).getResultList();
 		}
 	}
-    
-	
+
 	@Override
 	public boolean deleteStudentById(int id) {
 
@@ -145,7 +145,7 @@ public class StudentDaoImpl implements StudentDao {
 			e.printStackTrace();
 			return false;
 		}
-		
+
 		finally {
 
 			txn.commit();
@@ -155,9 +155,9 @@ public class StudentDaoImpl implements StudentDao {
 
 	@Override
 	public boolean updateStudent(Student student) {
-		
+
 		System.out.println("inside StudentRepository :: updateStudent()");
-		
+
 		Student fatchedStudent = new Student();
 		Session session = null;
 		Transaction txn = null;
@@ -167,14 +167,12 @@ public class StudentDaoImpl implements StudentDao {
 			txn = session.beginTransaction();
 			fatchedStudent = session.get(Student.class, student.getId());
 			if (null != fatchedStudent) {
-				
-			
+
 				session.merge(student);
-				
+
 				return true;
-				
-			} 
-			else {
+
+			} else {
 				System.out.println("Student with specified ID :" + student.getId() + "is not present in DB!!!");
 
 				throw new RuntimeException("Student with specified ID is not present in DB!!!");
@@ -186,7 +184,6 @@ public class StudentDaoImpl implements StudentDao {
 			e.printStackTrace();
 			return false;
 		}
-		
 		finally {
 
 			txn.commit();
